@@ -70,7 +70,9 @@ class Homestead
     config.vm.provider "hyperv" do |h, override|
       h.vmname = settings['name'] ||= 'homestead'
       h.cpus = settings['cpus'] ||= 1
-      h.memory = settings['memory'] ||= 2048
+      h.memory = settings['memory'] ||= 1024
+      h.maxmemory = settings['maxmemory'] ||= 2048
+      h.mac = settings['mac'] ||= nil
       h.linked_clone = true
 
       if Vagrant.has_plugin?('vagrant-hostmanager')
