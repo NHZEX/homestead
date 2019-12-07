@@ -18,7 +18,9 @@ class Homestead
     # Configure The Box
     config.vm.define settings['name'] ||= 'homestead'
     config.vm.box = settings['box'] ||= 'laravel/homestead'
-    config.vm.box_version = settings['version'] ||= '>= 8.0.0'
+    unless settings.has_key?('SpeakFriendAndEnter')
+      config.vm.box_version = settings['version'] ||= '>= 9.0.0'
+    end
     config.vm.hostname = settings['hostname'] ||= 'homestead'
 
     # Configure A Private Network IP
@@ -260,8 +262,6 @@ class Homestead
 
     # Install All The Configured Nginx Sites
     if settings.include? 'sites'
-      # socket = { 'map' => 'socket-wrench.test', 'to' => '/var/www/socket-wrench/public' }
-      # settings['sites'].unshift(socket)
 
       domains = []
 
@@ -330,7 +330,7 @@ class Homestead
               site['to'],                 # $2
               site['port'] ||= http_port, # $3
               site['ssl'] ||= https_port, # $4
-              site['php'] ||= '7.3',      # $5
+              site['php'] ||= '7.4',      # $5
               params ||= '',              # $6
               site['xhgui'] ||= '',       # $7
               site['exec'] ||= 'false',   # $8
@@ -439,13 +439,18 @@ class Homestead
         end
 
         config.vm.provision 'shell' do |s|
+          s.inline = "echo \"\nenv[$1] = '$2'\" >> /etc/php/7.4/fpm/pool.d/www.conf"
+          s.args = [var['key'], var['value']]
+        end
+
+        config.vm.provision 'shell' do |s|
           s.inline = "echo \"\n# Set Homestead Environment Variable\nexport $1=$2\" >> /home/vagrant/.profile"
           s.args = [var['key'], var['value']]
         end
       end
 
       config.vm.provision 'shell' do |s|
-        s.inline = 'service php5.6-fpm restart;service php7.0-fpm restart;service  php7.1-fpm restart; service php7.2-fpm restart; service php7.3-fpm restart;'
+        s.inline = 'service php5.6-fpm restart;service php7.0-fpm restart;service  php7.1-fpm restart; service php7.2-fpm restart; service php7.3-fpm restart; service php7.4-fpm restart;'
       end
     end
 
@@ -456,7 +461,7 @@ class Homestead
 
     config.vm.provision 'shell' do |s|
       s.name = 'Restarting Nginx'
-      s.inline = 'sudo service nginx restart;sudo service php5.6-fpm restart;sudo service php7.0-fpm restart;sudo service php7.1-fpm restart; sudo service php7.2-fpm restart; sudo service php7.3-fpm restart;'
+      s.inline = 'sudo service nginx restart;sudo service php5.6-fpm restart;sudo service php7.0-fpm restart;sudo service php7.1-fpm restart; sudo service php7.2-fpm restart; sudo service php7.3-fpm restart; sudo service php7.4-fpm restart;'
     end
 
     # Configure All Of The Configured Databases
@@ -518,7 +523,7 @@ class Homestead
     end
 
     # Create Minio Buckets
-    if settings.has_key?('buckets') && settings['minio']
+    if settings.has_key?('buckets') && settings['features'].any? { |feature| feature.include?('minio') }
       settings['buckets'].each do |bucket|
         config.vm.provision 'shell' do |s|
           s.name = 'Creating Minio Bucket: ' + bucket['name']
