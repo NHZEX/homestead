@@ -19,7 +19,7 @@ class Homestead
     config.vm.define settings['name'] ||= 'homestead'
     config.vm.box = settings['box'] ||= 'laravel/homestead'
     unless settings.has_key?('SpeakFriendAndEnter')
-      config.vm.box_version = settings['version'] ||= '>= 9.0.0'
+      config.vm.box_version = settings['version'] ||= '>= 9.5.0'
     end
     config.vm.hostname = settings['hostname'] ||= 'homestead'
 
@@ -276,6 +276,14 @@ class Homestead
           s.args = [site['map']]
         end
 
+        if site['wildcard'] == 'yes'
+          config.vm.provision 'shell' do |s|
+            s.name = 'Creating Wildcard Certificate: *.' + site['map'].partition('.').last
+            s.path = script_dir + '/create-certificate.sh'
+            s.args = ['*.' + site['map'].partition('.').last]
+          end
+        end
+
         type = site['type'] ||= 'laravel'
         load_balancer = settings['load_balancer'] ||= false
         http_port = load_balancer ? '8111' : '80'
@@ -338,6 +346,30 @@ class Homestead
               rewrites ||= ''             # $10
           ]
 
+          if site['use_wildcard'] == 'yes'
+            if site['type'] != 'apache'
+              config.vm.provision 'shell' do |s|
+                s.inline = "sed -i \"s/$1.crt/*.$2.crt/\" /etc/nginx/sites-available/$1"
+                s.args = [site['map'], site['map'].partition('.').last]
+              end
+
+              config.vm.provision 'shell' do |s|
+                s.inline = "sed -i \"s/$1.key/*.$2.key/\" /etc/nginx/sites-available/$1"
+                s.args = [site['map'], site['map'].partition('.').last]
+              end
+            else
+              config.vm.provision 'shell' do |s|
+                s.inline = "sed -i \"s/$1.crt/*.$2.crt/\" /etc/apache2/sites-available/$1-ssl.conf"
+                s.args = [site['map'], site['map'].partition('.').last]
+              end
+
+              config.vm.provision 'shell' do |s|
+                s.inline = "sed -i \"s/$1.key/*.$2.key/\" /etc/apache2/sites-available/$1-ssl.conf"
+                s.args = [site['map'], site['map'].partition('.').last]
+              end
+            end
+          end
+
           # generate pm2 json config file
           if site['pm2']
             config.vm.provision "shell" do |s2|
@@ -397,12 +429,6 @@ class Homestead
           end
         end
       end
-
-      # config.vm.provision 'shell' do |s|
-      #   s.name = 'Configure Avahi Service'
-      #   s.path = script_dir + '/configure-avahi.sh'
-      #   s.args = domains.join(",")
-      # end
     end
 
     # Configure All Of The Server Environment Variables
@@ -460,8 +486,8 @@ class Homestead
     end
 
     config.vm.provision 'shell' do |s|
-      s.name = 'Restarting Nginx'
-      s.inline = 'sudo service nginx restart;sudo service php5.6-fpm restart;sudo service php7.0-fpm restart;sudo service php7.1-fpm restart; sudo service php7.2-fpm restart; sudo service php7.3-fpm restart; sudo service php7.4-fpm restart;'
+      s.name = 'Restart Webserver'
+      s.path = script_dir + '/restart-webserver.sh'
     end
 
     # Configure All Of The Configured Databases
@@ -575,7 +601,7 @@ class Homestead
     now = Time.now.strftime("%Y%m%d%H%M")
     config.trigger.before :destroy do |trigger|
       trigger.warn = "Backing up mysql database #{database}..."
-      trigger.run_remote = { inline: "mkdir -p #{dir} && mysqldump --routines #{database} > #{dir}/#{database}-#{now}.sql" }
+      trigger.run_remote = { inline: "mkdir -p #{dir}/#{now} && mysqldump --routines #{database} > #{dir}/#{now}/#{database}-#{now}.sql" }
     end
   end
 
@@ -583,7 +609,7 @@ class Homestead
     now = Time.now.strftime("%Y%m%d%H%M")
     config.trigger.before :destroy do |trigger|
       trigger.warn = "Backing up postgres database #{database}..."
-      trigger.run_remote = { inline: "mkdir -p #{dir} && echo localhost:5432:#{database}:homestead:secret > ~/.pgpass && chmod 600 ~/.pgpass && pg_dump -U homestead -h localhost #{database} > #{dir}/#{database}-#{now}.sql" }
+      trigger.run_remote = { inline: "mkdir -p #{dir}/#{now} && echo localhost:5432:#{database}:homestead:secret > ~/.pgpass && chmod 600 ~/.pgpass && pg_dump -U homestead -h localhost #{database} > #{dir}/#{now}/#{database}-#{now}.sql" }
     end
   end
 end
