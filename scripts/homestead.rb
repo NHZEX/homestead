@@ -19,7 +19,7 @@ class Homestead
     config.vm.define settings['name'] ||= 'homestead'
     config.vm.box = settings['box'] ||= 'laravel/homestead'
     unless settings.has_key?('SpeakFriendAndEnter')
-      config.vm.box_version = settings['version'] ||= '>= 9.5.0'
+      config.vm.box_version = settings['version'] ||= '~> 9.5.0'
     end
     config.vm.hostname = settings['hostname'] ||= 'homestead'
 
@@ -76,6 +76,15 @@ class Homestead
       h.maxmemory = settings['maxmemory'] ||= 2048
       h.mac = settings['mac'] ||= nil
       h.linked_clone = true
+      if settings.has_key?('hyperv_mac') && settings['hyperv_mac']
+        h.mac = settings['hyperv_mac']
+      end
+      if settings.has_key?('hyperv_maxmemory') && settings['hyperv_maxmemory']
+        h.maxmemory = settings['hyperv_maxmemory']
+      end
+      if settings.has_key?('hyperv_enable_virtualization_extensions') && settings['hyperv_enable_virtualization_extensions']
+        h.enable_virtualization_extensions = true
+      end
 
       if Vagrant.has_plugin?('vagrant-hostmanager')
         override.hostmanager.ignore_private_ip = true
