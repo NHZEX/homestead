@@ -19,7 +19,7 @@ class Homestead
     config.vm.define settings['name'] ||= 'homestead'
     config.vm.box = settings['box'] ||= 'laravel/homestead'
     unless settings.has_key?('SpeakFriendAndEnter')
-      config.vm.box_version = settings['version'] ||= '~> 9.0'
+      config.vm.box_version = settings['version'] ||= '~> 9'
     end
     config.vm.hostname = settings['hostname'] ||= 'homestead'
 
@@ -302,9 +302,9 @@ class Homestead
 
         if site['wildcard'] == 'yes'
           config.vm.provision 'shell' do |s|
-            s.name = 'Creating Wildcard Certificate: *.' + site['map'].partition('.').last
+            s.name = 'Creating Wildcard Certificate: *.' + site['map']
             s.path = script_dir + '/create-certificate.sh'
-            s.args = ['*.' + site['map'].partition('.').last]
+            s.args = ['*.' + site['map']]
           end
         end
 
@@ -375,23 +375,23 @@ class Homestead
             if site['use_wildcard'] != 'no'
               if site['type'] != 'apache'
                 config.vm.provision 'shell' do |s|
-                  s.inline = "sed -i \"s/$1.crt/*.$2.crt/\" /etc/nginx/sites-available/$1"
-                  s.args = [site['map'], site['map'].partition('.').last]
+                  s.inline = "sed -i \"s/$1.crt/*.$1.crt/\" /etc/nginx/sites-available/$1"
+                  s.args = [site['map']]
                 end
 
                 config.vm.provision 'shell' do |s|
-                  s.inline = "sed -i \"s/$1.key/*.$2.key/\" /etc/nginx/sites-available/$1"
-                  s.args = [site['map'], site['map'].partition('.').last]
+                  s.inline = "sed -i \"s/$1.key/*.$1.key/\" /etc/nginx/sites-available/$1"
+                  s.args = [site['map']]
                 end
               else
                 config.vm.provision 'shell' do |s|
-                  s.inline = "sed -i \"s/$1.crt/*.$2.crt/\" /etc/apache2/sites-available/$1-ssl.conf"
-                  s.args = [site['map'], site['map'].partition('.').last]
+                  s.inline = "sed -i \"s/$1.crt/*.$1.crt/\" /etc/apache2/sites-available/$1-ssl.conf"
+                  s.args = [site['map']]
                 end
 
                 config.vm.provision 'shell' do |s|
-                  s.inline = "sed -i \"s/$1.key/*.$2.key/\" /etc/apache2/sites-available/$1-ssl.conf"
-                  s.args = [site['map'], site['map'].partition('.').last]
+                  s.inline = "sed -i \"s/$1.key/*.$1.key/\" /etc/apache2/sites-available/$1-ssl.conf"
+                  s.args = [site['map']]
                 end
               end
             end
@@ -503,7 +503,7 @@ class Homestead
       end
 
       config.vm.provision 'shell' do |s|
-        s.inline = 'service php5.6-fpm restart;service php7.0-fpm restart;service  php7.1-fpm restart; service php7.2-fpm restart; service php7.3-fpm restart; service php7.4-fpm restart;'
+        s.inline = 'service php5.6-fpm restart;service php7.0-fpm restart;service  php7.1-fpm restart; service php7.2-fpm restart; service php7.3-fpm restart; service php7.4-fpm restart; service php8.0-fpm restart;'
       end
     end
 
@@ -536,16 +536,20 @@ class Homestead
       end
 
       settings['databases'].each do |db|
-        config.vm.provision 'shell' do |s|
-          s.name = 'Creating MySQL Database: ' + db
-          s.path = script_dir + '/create-mysql.sh'
-          s.args = [db]
+        if (enabled_databases.include? 'mysql') || (enabled_databases.include? 'mariadb')
+          config.vm.provision 'shell' do |s|
+            s.name = 'Creating MySQL / MariaDB Database: ' + db
+            s.path = script_dir + '/create-mysql.sh'
+            s.args = [db]
+          end
         end
 
-        config.vm.provision 'shell' do |s|
-          s.name = 'Creating Postgres Database: ' + db
-          s.path = script_dir + '/create-postgres.sh'
-          s.args = [db]
+        if enabled_databases.include? 'postgresql'
+          config.vm.provision 'shell' do |s|
+            s.name = 'Creating Postgres Database: ' + db
+            s.path = script_dir + '/create-postgres.sh'
+            s.args = [db]
+          end
         end
 
         if enabled_databases.include? 'mongodb'
