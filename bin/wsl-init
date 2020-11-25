@@ -714,3 +714,11 @@ sysctl fs.protected_regular=0
 su $WSL_USER_NAME -c 'composer install'
 su $WSL_USER_NAME -c 'bash init.sh'
 
+# systemctl enable
+sudo systemctl enable php8.0-fpm
+sudo systemctl enable php7.4-fpm
+sudo systemctl enable php7.3-fpm
+sudo systemctl enable nginx
+sudo systemctl enable mysql
+sudo systemctl enable redis-server
+sudo systemctl enable ssh
