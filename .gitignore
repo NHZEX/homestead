@@ -9,4 +9,7 @@ phpunit.xml
 /mysql_backup
 /postgres_backup
 /user-customizations.sh
+.phpunit.result.cache
+wsl-init.log
+.backup/*
 .idea
