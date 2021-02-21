@@ -74,8 +74,7 @@ class WslCreateSiteCommand extends Command
                 isset($site['ssl']) ? $site['ssl'] : 443,     // $4
                 isset($site['php']) ? $site['php'] : '7.4',   // $5
             ];
-            $type = $site['type'] ?? 'laravel';
-            $create_cmd = "sudo bash {$this->basePath}/scripts/site-types/{$type}.sh {$args[0]} \"{$args[1]}\"";
+            $create_cmd = "sudo bash {$this->basePath}/scripts/site-types/laravel.sh {$args[0]} \"{$args[1]}\"";
             $create_cmd .= " {$args[2]} {$args[3]} {$args[4]}";
 
             // run command to create the site
