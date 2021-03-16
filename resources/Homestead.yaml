@@ -2,12 +2,20 @@
 ip: "192.168.10.10"
 memory: 2048
 cpus: 2
+vram: 16
+graphicscontroller: vmsvga
 provider: virtualbox
 
 authorize: ~/.ssh/id_rsa.pub
 
 keys:
     - ~/.ssh/id_rsa
+
+#networks:
+#    - type: "public_network"
+#      ip: "192.168.138.122"
+#      netmask: "255.255.255.0"
+#      bridge: "en0"
 
 folders:
     - map: ~/code
@@ -33,6 +41,7 @@ features:
 #    - disabled:
 #        - "postgresql@11-main"
 
+#default_ports: false
 # ports:
 #     - send: 50000
 #       to: 5000
