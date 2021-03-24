@@ -23,6 +23,12 @@ class Homestead
     end
     config.vm.hostname = settings['hostname'] ||= 'homestead'
 
+    if settings.has_key?('ip')
+      config.ssh.host = settings['ip'] ||= '127.0.0.1'
+      config.ssh.guest_port = '22'
+    end
+    # config.vm.usable_port_range = settings['usable_port_range'] ||= 12000..12500
+
     # Configure A Private Network IP
     if settings['ip'] != 'autonetwork'
       config.vm.network :private_network, ip: settings['ip'] ||= '192.168.10.10'
