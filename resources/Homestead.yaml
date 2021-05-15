@@ -29,7 +29,7 @@ databases:
     - homestead
 
 features:
-    - mysql: false
+    - mysql: true
     - mariadb: false
     - postgresql: false
     - ohmyzsh: false

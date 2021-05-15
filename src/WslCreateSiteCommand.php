@@ -61,11 +61,18 @@ class WslCreateSiteCommand extends Command
      */
     public function execute(InputInterface $input, OutputInterface $output)
     {
+        // Remove any existing nginx sites
+        $shell_output = shell_exec('sudo rm -rf /etc/nginx/sites-available/*');
+        if (! is_null($shell_output)) {
+            var_dump($shell_output);
+        }
+
         // Grab the current settings or create an example configuration
         $format = $input->getOption('json') ? 'json' : 'yaml';
         $settings = $this->parseSettingsFromFile($format, []);
 
         foreach ($settings['wsl_sites'] as $key => $site) {
+            $type = isset($site['type']) ? $site['type'] : 'laravel';
             $create_cmd = '';
             $args = [
                 $site['map'],                                 // $1
@@ -74,7 +81,7 @@ class WslCreateSiteCommand extends Command
                 isset($site['ssl']) ? $site['ssl'] : 443,     // $4
                 isset($site['php']) ? $site['php'] : '7.4',   // $5
             ];
-            $create_cmd = "sudo bash {$this->basePath}/scripts/site-types/laravel.sh {$args[0]} \"{$args[1]}\"";
+            $create_cmd = "sudo bash {$this->basePath}/scripts/site-types/{$type}.sh {$args[0]} \"{$args[1]}\"";
             $create_cmd .= " {$args[2]} {$args[3]} {$args[4]}";
 
             // run command to create the site
