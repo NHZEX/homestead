@@ -250,7 +250,7 @@ class Homestead
       # Ensure we have PHP versions used in sites in our features
       if settings.has_key?('sites')
         settings['sites'].each do |site|
-          if site.has_key?('php')
+          if site.has_key?('php') && site['php'].to_s.match?(/^\d+(\.\d+)*$/)
             settings['features'].push({"php" + site['php'] => true})
           end
         end
