@@ -28,6 +28,13 @@ if [ -n "${10}" ]; then
    done
 fi
 
+# 判断 $5 是否为版本号（仅包含数字和点）
+if [[ "$5" =~ ^[0-9.]+$ ]]; then
+    fastcgi_pass_socket="unix:/var/run/php/php$5-fpm.sock"
+else
+    fastcgi_pass_socket="unix:$5"
+fi
+
 if [ "$7" = "true" ]
 then configureXhgui="
 location /xhgui {
@@ -41,7 +48,7 @@ block="server {
     listen ${3:-80};
     listen ${4:-443} ssl http2;
     server_name .$1;
-    root \"$2\";
+    root \"$2/public/\";
 
     index index.html index.htm index.php;
 
@@ -70,7 +77,7 @@ block="server {
 
     location ~ \.php$ {
         fastcgi_split_path_info ^(.+\.php)(/.+)$;
-        fastcgi_pass unix:/var/run/php/php$5-fpm.sock;
+        fastcgi_pass $fastcgi_pass_socket;
         fastcgi_index index.php;
         include fastcgi_params;
         fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
