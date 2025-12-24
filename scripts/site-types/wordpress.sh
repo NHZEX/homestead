@@ -133,26 +133,26 @@ define( 'WP_DEBUG', true ); \\n\
 
 
 # If wp-cli is installed, try and update it
-if [ -f /usr/local/bin/wp ]
-then
-    wp cli update --stable --yes
-fi
+#if [ -f /usr/local/bin/wp ]
+#then
+#    wp cli update --stable --yes
+#fi
 
 # If WP is not installed then download it
-if [ -d "$2/wp" ]
-then
-    echo "WordPress is already installed."
-else
-    sudo -i -u vagrant -- mkdir "$2/wp"
-    sudo -i -u vagrant -- wp core download --path="$2/wp" --version=latest
-    sudo -i -u vagrant -- cp -R $2/wp/wp-content $2/wp-content
-    sudo -i -u vagrant -- cp $2/wp/index.php $2/index.php
-    sudo -i -u vagrant -- sed -i "s|/wp-blog-header|/wp/wp-blog-header|g" $2/index.php
-    sudo -i -u vagrant -- echo "path: $2/wp/" > $2/wp-cli.yml
-    sudo -i -u vagrant -- wp config create --path=$2/wp/ --dbname=${1/./_} --dbuser=homestead --dbpass=secret --dbcollate=utf8_general_ci
-    sudo -i -u vagrant -- mv $2/wp/wp-config.php $2/wp-config.php
-    sudo -i -u vagrant -- sed -i 's|'"$wpConfigSearchStr"'|'"$wpConfigReplaceStr"'|g' $2/wp-config.php
-    sudo -i -u vagrant -- sed -i "s|define( 'ABSPATH', dirname( __FILE__ ) . '/' );|define( 'ABSPATH', __DIR__ . '/wp/' );|g" $2/wp-config.php
-
-    echo "WordPress has been downloaded and config file has been generated, install it manually."
-fi
+#if [ -d "$2/wp" ]
+#then
+#    echo "WordPress is already installed."
+#else
+#    sudo -i -u vagrant -- mkdir "$2/wp"
+#    sudo -i -u vagrant -- wp core download --path="$2/wp" --version=latest
+#    sudo -i -u vagrant -- cp -R $2/wp/wp-content $2/wp-content
+#    sudo -i -u vagrant -- cp $2/wp/index.php $2/index.php
+#    sudo -i -u vagrant -- sed -i "s|/wp-blog-header|/wp/wp-blog-header|g" $2/index.php
+#    sudo -i -u vagrant -- echo "path: $2/wp/" > $2/wp-cli.yml
+#    sudo -i -u vagrant -- wp config create --path=$2/wp/ --dbname=${1/./_} --dbuser=homestead --dbpass=secret --dbcollate=utf8_general_ci
+#    sudo -i -u vagrant -- mv $2/wp/wp-config.php $2/wp-config.php
+#    sudo -i -u vagrant -- sed -i 's|'"$wpConfigSearchStr"'|'"$wpConfigReplaceStr"'|g' $2/wp-config.php
+#    sudo -i -u vagrant -- sed -i "s|define( 'ABSPATH', dirname( __FILE__ ) . '/' );|define( 'ABSPATH', __DIR__ . '/wp/' );|g" $2/wp-config.php
+#
+#    echo "WordPress has been downloaded and config file has been generated, install it manually."
+#fi
