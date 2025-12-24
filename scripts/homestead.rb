@@ -685,10 +685,12 @@ class Homestead
     end
 
     # Update Composer On Every Provision
-    config.vm.provision 'shell' do |s|
-      s.name = 'Update Composer'
-      s.inline = 'sudo chown -R vagrant:vagrant /usr/local/bin && sudo -u vagrant /usr/bin/php8.4 /usr/local/bin/composer self-update --no-progress && sudo chown -R vagrant:vagrant /home/vagrant/.config/'
-      s.privileged = false
+    if Homestead.feature_enabled?(settings, 'my_update_composer')
+      config.vm.provision 'shell' do |s|
+        s.name = 'Update Composer'
+        s.inline = 'sudo chown -R vagrant:vagrant /usr/local/bin && sudo -u vagrant /usr/bin/php8.4 /usr/local/bin/composer self-update --no-progress && sudo chown -R vagrant:vagrant /home/vagrant/.config/'
+        s.privileged = false
+      end
     end
 
     # Add config file for ngrok
@@ -700,7 +702,7 @@ class Homestead
 
     config.vm.provision 'shell' do |s|
       s.name = 'Update motd'
-      s.inline = 'sudo service motd-news restart'
+      s.inline = 'sudo service motd-news restart || true'
     end
 
     if settings.has_key?('backup') && settings['backup'] && (Vagrant::VERSION >= '2.1.0' || Vagrant.has_plugin?('vagrant-triggers'))
@@ -778,5 +780,13 @@ class Homestead
       trigger.warn = "Backing up mongodb database #{database}..."
       trigger.run_remote = {inline: "mkdir -p #{dir}/#{now} && mongodump --db #{database} --out #{dir}/#{now}"}
     end
+  end
+
+  def self.feature_enabled?(settings, feature_name, default: true)
+    features = settings['features']
+    return default unless features.is_a?(Array)
+
+    feature = features.find { |f| f.is_a?(Hash) && f.has_key?(feature_name) }
+    feature ? feature[feature_name] != false : default
   end
 end
