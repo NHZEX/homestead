@@ -45,6 +45,8 @@ class Homestead
       vb.customize ['modifyvm', :id, '--natdnsproxy1', 'on']
       vb.customize ['modifyvm', :id, '--natdnshostresolver1', settings['natdnshostresolver'] ||= 'on']
       vb.customize ['modifyvm', :id, '--ostype', 'Ubuntu_64']
+      vb.customize ["modifyvm", :id, "--vram", settings['vram'] ||= '16']
+      vb.customize ["modifyvm", :id, "--graphicscontroller", settings['graphicscontroller'] ||= 'vboxvga']
 
       if settings.has_key?('gui') && settings['gui']
         vb.gui = true
@@ -55,6 +57,13 @@ class Homestead
       if settings.has_key?('paravirtprovider') && settings['paravirtprovider']
         vb.customize ['modifyvm', :id, '--paravirtprovider', settings['paravirtprovider'] ||= 'kvm']
       end
+
+      # 设置磁盘为 SSD 模式
+      vb.customize ["storageattach", :id,
+                    "--storagectl", "SATA Controller",
+                    "--port", "0",
+                    "--device", "0",
+                    "--nonrotational", "on"]
 
       if Vagrant::Util::Platform.windows?
         vb.customize ["setextradata", :id, "VBoxInternal2/SharedFoldersEnableSymlinksCreate/v-root", "1"]
