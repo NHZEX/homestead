@@ -13,3 +13,6 @@ trim_trailing_whitespace = false
 
 [*.{yml,yaml,yaml.example}]
 indent_size = 2
+
+[*.rb]
+indent_size = 2
