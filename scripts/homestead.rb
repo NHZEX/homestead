@@ -337,6 +337,58 @@ class Homestead
       end
     end
 
+    # * 管理 Docker 全局服务（从 /vagrant/docker/<app> 复制到 /opt/.docker/<app> 并执行）
+    # * 配置格式示例：
+    # * docker_apps:
+    # *   - portainer: true
+    # *   - someapp: false
+    if settings.has_key?('docker_apps')
+      docker_apps = settings['docker_apps']
+      enabled_apps = []
+      disabled_apps = []
+
+      if docker_apps.is_a?(Array)
+        # * 去重：以 app 名称为唯一键，后出现的配置覆盖先出现的配置
+        app_settings = {}
+
+        docker_apps.each do |app|
+          next unless app.is_a?(Hash)
+
+          app.each do |app_name, app_value|
+            next unless app_name.is_a?(String) && !app_name.strip.empty?
+
+            # * 保持“最后一次出现”的顺序
+            app_settings.delete(app_name)
+            app_settings[app_name] = app_value
+          end
+        end
+
+        app_settings.each do |app_name, app_value|
+          if app_value == false
+            disabled_apps << app_name
+          else
+            enabled_apps << app_name
+          end
+        end
+      end
+
+      if enabled_apps.any? || disabled_apps.any?
+        # * 提供一个固定入口，便于在 VM 内手动执行：docker-apps.sh start <app>
+        config.vm.provision "docker_apps_bin", type: "shell", inline: "sudo ln -sf /vagrant/scripts/docker-apps.sh /usr/local/bin/docker-apps.sh && sudo chmod +x /usr/local/bin/docker-apps.sh"
+
+        config.vm.provision "docker_apps", type: "shell" do |s|
+          s.name = 'Managing Docker apps'
+          s.path = script_dir + '/docker-apps.sh'
+          s.env = {
+            'DOCKER_APPS_SOURCE' => '/vagrant/docker',
+            'DOCKER_APPS_DEST' => '/opt/.docker',
+            'DOCKER_APPS_ENABLED' => enabled_apps.join(' '),
+            'DOCKER_APPS_DISABLED' => disabled_apps.join(' '),
+          }
+        end
+      end
+    end
+
     # Clear any existing nginx sites
     config.vm.provision 'shell' do |s|
       s.path = script_dir + '/clear-nginx.sh'

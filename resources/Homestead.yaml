@@ -26,6 +26,22 @@ features:
   - ohmyzsh: false
   - webdriver: false
 
+#
+# docker_apps: Docker 全局公共服务（会在 vagrant provision 期间复制到 /opt/.docker 并执行）
+#
+# 约定：
+# - 应用目录：docker/<app>/
+# - 默认入口：docker/<app>/docker-compose.yml
+# - 自定义入口（可选）：docker/<app>/start.sh（存在则优先执行）
+# - 自定义停止（可选）：docker/<app>/stop.sh（禁用时优先执行；否则默认 docker compose stop）
+# - 本地覆写（推荐）：docker-compose.override.yml / docker-compose.override.yaml、.env、.env.local、.local/ 这类文件会在同步时被保护
+# - 禁用仅 stop（不 down）
+#
+# 示例：
+# docker_apps:
+#   - portainer: true
+#   - someapp: false
+
 services:
   - enabled:
       - "mysql"

@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<clickhouse>
+    <!-- 监听所有接口 -->
+    <listen_host>::</listen_host>
+
+    <!-- 时区 -->
+    <timezone>Asia/Shanghai</timezone>
+
+    <!-- 日志级别 -->
+    <logger>
+        <level>information</level>
+    </logger>
+</clickhouse>

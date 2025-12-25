@@ -1,0 +1,5 @@
+<yandex>
+    <max_memory_usage>2147483648</max_memory_usage> <!-- 2GB -->
+    <max_server_memory_usage>3221225472</max_server_memory_usage> <!-- 3GB -->
+    <max_memory_usage_for_all_queries>4294967296</max_memory_usage_for_all_queries> <!-- 4GB -->
+</yandex>

@@ -1,0 +1,59 @@
+<yandex>
+    <!-- 覆盖 trace_log 配置 -->
+    <trace_log>
+        <database>system</database>
+        <table>trace_log</table>
+        <partition_by>toYYYYMM(event_date)</partition_by>
+        <ttl>event_date + INTERVAL 7 DAY DELETE</ttl>  <!-- 自动清理7天前的数据 -->
+        <flush_interval_milliseconds>7500</flush_interval_milliseconds>
+    </trace_log>
+
+    <!-- 覆盖 asynchronous_metric_log 配置 -->
+    <asynchronous_metric_log>
+        <database>system</database>
+        <table>asynchronous_metric_log</table>
+        <ttl>event_date + INTERVAL 3 DAY DELETE</ttl>  <!-- 自动清理3天前的数据 -->
+        <flush_interval_milliseconds>60000</flush_interval_milliseconds>
+    </asynchronous_metric_log>
+
+    <!-- 覆盖 metric_log 配置 -->
+    <metric_log>
+        <database>system</database>
+        <table>metric_log</table>
+        <ttl>event_date + INTERVAL 3 DAY DELETE</ttl>
+        <flush_interval_milliseconds>7500</flush_interval_milliseconds>
+    </metric_log>
+
+    <!-- 覆盖 query_log 配置 -->
+    <query_log>
+        <database>system</database>
+        <table>query_log</table>
+        <partition_by>toYYYYMM(event_date)</partition_by>
+        <ttl>event_date + INTERVAL 7 DAY DELETE</ttl>  <!-- 查询日志保留稍久 -->
+        <flush_interval_milliseconds>10000</flush_interval_milliseconds>
+    </query_log>
+
+    <!-- 覆盖 query_thread_log 配置 -->
+    <query_thread_log>
+        <database>system</database>
+        <table>query_thread_log</table>
+        <ttl>event_time + INTERVAL 7 DAY DELETE</ttl>
+        <flush_interval_milliseconds>15000</flush_interval_milliseconds>
+    </query_thread_log>
+
+    <!-- 覆盖 crash_log 配置 -->
+    <crash_log>
+        <database>system</database>
+        <table>crash_log</table>
+        <ttl>event_date + INTERVAL 30 DAY DELETE</ttl>  <!-- 崩溃日志保留更久 -->
+        <flush_interval_milliseconds>300000</flush_interval_milliseconds>  <!-- 5分钟刷新 -->
+    </crash_log>
+
+    <!-- 覆盖 text_log 配置（如果启用） -->
+    <text_log>
+        <database>system</database>
+        <table>text_log</table>
+        <ttl>event_time + INTERVAL 3 DAY DELETE</ttl>
+        <flush_interval_milliseconds>20000</flush_interval_milliseconds>
+    </text_log>
+</yandex>

@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<clickhouse>
+    <users>
+        <default>
+            <password remove='1' />
+            <!-- 允许无密码（开发环境）。注意：配合 <networks>::/0 会允许任意来源访问，请自行评估风险。 -->
+            <no_password>1</no_password>
+            <networks>
+                <ip>::/0</ip>
+            </networks>
+            <profile>default</profile>
+            <quota>default</quota>
+        </default>
+    </users>
+</clickhouse>
