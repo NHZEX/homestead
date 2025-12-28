@@ -4,7 +4,7 @@
         <database>system</database>
         <table>trace_log</table>
         <partition_by>toYYYYMM(event_date)</partition_by>
-        <ttl>event_date + INTERVAL 7 DAY DELETE</ttl>  <!-- 自动清理7天前的数据 -->
+        <ttl>event_date + INTERVAL 3 DAY DELETE</ttl>  <!-- 自动清理7天前的数据 -->
         <flush_interval_milliseconds>7500</flush_interval_milliseconds>
     </trace_log>
 
@@ -29,7 +29,7 @@
         <database>system</database>
         <table>query_log</table>
         <partition_by>toYYYYMM(event_date)</partition_by>
-        <ttl>event_date + INTERVAL 7 DAY DELETE</ttl>  <!-- 查询日志保留稍久 -->
+        <ttl>event_date + INTERVAL 5 DAY DELETE</ttl>  <!-- 查询日志保留稍久 -->
         <flush_interval_milliseconds>10000</flush_interval_milliseconds>
     </query_log>
 
@@ -37,7 +37,7 @@
     <query_thread_log>
         <database>system</database>
         <table>query_thread_log</table>
-        <ttl>event_time + INTERVAL 7 DAY DELETE</ttl>
+        <ttl>event_time + INTERVAL 5 DAY DELETE</ttl>
         <flush_interval_milliseconds>15000</flush_interval_milliseconds>
     </query_thread_log>
 

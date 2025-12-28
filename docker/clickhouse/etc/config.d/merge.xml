@@ -1,0 +1,16 @@
+<clickhouse>
+    <merge_tree>
+        <!-- 单次 merge 不超过 256MB -->
+        <max_bytes_to_merge_at_max_space_in_pool>268435456</max_bytes_to_merge_at_max_space_in_pool>
+        <max_bytes_to_merge_at_min_space_in_pool>134217728</max_bytes_to_merge_at_min_space_in_pool>
+
+        <!-- 强制小 block -->
+        <merge_max_block_size>32768</merge_max_block_size>
+
+        <!-- 避免 vertical merge 提前触发 -->
+        <vertical_merge_algorithm_min_rows_to_activate>5000000</vertical_merge_algorithm_min_rows_to_activate>
+
+        <!-- 减少同时打开的流 -->
+        <min_rows_for_compact_part>1000000</min_rows_for_compact_part>
+    </merge_tree>
+</clickhouse>

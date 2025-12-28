@@ -1,0 +1,10 @@
+<clickhouse>
+    <background_processing_pool>
+        <size>1</size>
+        <max_thread_pool_size>2</max_thread_pool_size>
+    </background_processing_pool>
+
+    <background_move_pool>
+        <size>1</size>
+    </background_move_pool>
+</clickhouse>

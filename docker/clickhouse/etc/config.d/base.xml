@@ -9,5 +9,15 @@
     <!-- 日志级别 -->
     <logger>
         <level>information</level>
+        <!-- 单个日志文件大小 -->
+        <size>256M</size>
+        <!-- 保留多少个滚动文件 -->
+        <count>8</count>
     </logger>
+
+    <!-- 给系统和 jemalloc 留空间 -->
+    <max_server_memory_usage>4Gi</max_server_memory_usage>
+
+    <!-- 防止后台任务把内存吃满 -->
+    <max_server_memory_usage_to_ram_ratio>0.75</max_server_memory_usage_to_ram_ratio>
 </clickhouse>
