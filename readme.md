@@ -32,3 +32,8 @@ $ mkdir homestead && \
 ```
 
 After it's complete, `vendor/laravel/homestead` will be a git checkout and can be used normally.
+
+## Link
+
+- [Svpernova09 homestead | HashiCorp Cloud Platform](https://portal.cloud.hashicorp.com/vagrant/discover/Svpernova09/homestead)
+- [svpernova09/settler](https://github.com/svpernova09/settler)
