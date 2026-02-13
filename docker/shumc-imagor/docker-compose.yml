@@ -1,0 +1,32 @@
+services:
+  imagor:
+    image: shumc/imagor:1.6.13
+    restart: unless-stopped
+    environment:
+      - PORT=8326
+      - DEBUG=1
+      # 安全配置
+      - SERVER_CORS=1
+      - IMAGOR_UNSAFE=1
+      - UPLOAD_LOADER_ENABLE=1
+      - UPLOAD_LOADER_MAX_ALLOWED_SIZE=67108864
+      - VIPS_MAX_RESOLUTION=30000000
+      - VIPS_MAX_WIDTH=10000
+      - VIPS_MAX_HEIGHT=10000
+      # 存储配置
+      - FILE_LOADER_BASE_DIR=/tmp/cache/data # enable file loader by specifying base dir
+      - FILE_STORAGE_BASE_DIR=/tmp/cache/data # enable file storage by specifying base dir
+      - FILE_STORAGE_MKDIR_PERMISSION=0755 # optional
+      - FILE_STORAGE_WRITE_PERMISSION=0666 # optional
+      - FILE_RESULT_STORAGE_BASE_DIR=/tmp/cache/result # enable file result storage by specifying base dir
+      - FILE_RESULT_STORAGE_MKDIR_PERMISSION=0755 # optional
+      - FILE_RESULT_STORAGE_WRITE_PERMISSION=0666 # optional
+      # 日志配置
+      - SERVER_ACCESS_LOG=1
+      # 其他配置
+      - IMAGOR_REQUEST_TIMEOUT=${IMAGOR_REQUEST_TIMEOUT:-45s} # 请求超时时间（秒）
+      - IMAGOR_PROCESS_TIMEOUT=${IMAGOR_PROCESS_TIMEOUT:-45s} # 处理超时时间（秒）
+    volumes:
+      - /tmp/imagor/cache:/tmp/cache
+    ports:
+      - "8326:8326"

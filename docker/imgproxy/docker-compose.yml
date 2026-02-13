@@ -20,6 +20,8 @@ services:
       # 日志配置
       - IMGPROXY_LOG_FORMAT=pretty
       - IMGPROXY_LOG_LEVEL=${IMGPROXY_LOG_LEVEL:-info}
+      # 性能配置
+      - IMGPROXY_MALLOC=tcmalloc
     volumes:
       - /tmp/imgproxy-cache:/tmp/imgproxy-cache
     ports:
