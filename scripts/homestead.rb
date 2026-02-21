@@ -810,6 +810,20 @@ class Homestead
         s.inline = 'sudo sh -c "echo 0 >> /sys/block/sda/queue/iosched/group_idle"'
       end
     end
+
+    # * 在 vagrant up 完成后的最后一步执行启动脚本（bootstrap）
+    # * - 触发时机：after :up（共享目录已挂载，且所有 provision 已执行完成，包含 Vagrantfile 里后续的 after.sh / user-customizations.sh）
+    # * - 容错策略：任何脚本失败都被忽略，避免影响虚拟机启动
+    if settings.has_key?('bootstrap')
+      bootstrap_inline = Homestead.build_bootstrap_inline_script(settings['bootstrap'])
+
+      if bootstrap_inline
+        config.trigger.after :up do |trigger|
+          trigger.info = 'Running Homestead bootstrap...'
+          trigger.run_remote = {inline: bootstrap_inline}
+        end
+      end
+    end
   end
 
   def self.backup_mysql(database, dir, config)
@@ -842,5 +856,112 @@ class Homestead
 
     feature = features.find { |f| f.is_a?(Hash) && f.has_key?(feature_name) }
     feature ? feature[feature_name] != false : default
+  end
+
+  def self.sh_single_quote(value)
+    # * 将任意字符串安全地转换为 shell 单引号字符串（避免注入与变量展开）
+    str = value.to_s
+    return "''" if str.empty?
+
+    "'" + str.gsub("'", %q('"'"')) + "'"
+  end
+
+  def self.build_bootstrap_inline_script(bootstrap_items)
+    # * 根据 Homestead.yaml 的 bootstrap 配置生成远程执行脚本
+    # * - 返回 nil 表示无需配置 trigger
+    return nil if bootstrap_items == false
+
+    items =
+      if bootstrap_items.is_a?(Array)
+        bootstrap_items
+      elsif bootstrap_items.is_a?(Hash) || bootstrap_items.is_a?(String)
+        [bootstrap_items]
+      else
+        []
+      end
+    tasks = []
+
+    items.each_with_index do |item, idx|
+      next if item == false
+
+      task = if item.is_a?(String)
+        {'script' => item}
+      elsif item.is_a?(Hash)
+        item
+      else
+        next
+      end
+
+      next if task.has_key?('enabled') && task['enabled'] == false
+
+      script = task['script'] || task['inline'] || task['command']
+      next if script.nil? || script.to_s.strip.empty?
+
+      script_str = script.to_s
+      script_lines = script_str.lines
+
+      # * 兼容常见误写：script 只写了一行且整行被引号包起来（如："docker compose up -d"）
+      # * 这种写法在 bash 中会被当成“命令名包含空格”的单个 token，几乎必然执行失败
+      if script_lines.length == 1
+        one_line = script_str.strip
+        if (one_line.start_with?('"') && one_line.end_with?('"')) || (one_line.start_with?("'") && one_line.end_with?("'"))
+          script_str = one_line[1..-2].to_s + "\n"
+        end
+      end
+
+      tasks << {
+        index: idx,
+        name: (task['name'] || "bootstrap-#{idx + 1}").to_s,
+        user: (task['user'] || 'vagrant').to_s,
+        working_dir: (task['working_dir'] || task['workdir'] || task['cwd'] || '').to_s,
+        script: script_str,
+      }
+    end
+
+    return nil if tasks.empty?
+
+    inline = +"#!/usr/bin/env bash\n"
+    inline << "set +e\n"
+    inline << "echo \"[homestead][bootstrap] 开始执行 bootstrap（允许失败，不影响 vagrant up）\"\n"
+    inline << "echo \"[homestead][bootstrap] 提示：bootstrap.script 建议直接写命令（不要给整行命令再额外加引号）\"\n"
+    inline << "\n"
+
+    tasks.each_with_index do |t, order|
+      script_path = "/tmp/homestead-bootstrap-#{order}.sh"
+      heredoc = "HOMESTEAD_BOOTSTRAP_#{order}"
+
+      inline << "cat > #{Homestead.sh_single_quote(script_path)} <<'#{heredoc}'\n"
+      inline << t[:script]
+      inline << "\n" unless t[:script].end_with?("\n")
+      inline << "#{heredoc}\n"
+      inline << "sed -i 's/\\r$//' #{Homestead.sh_single_quote(script_path)} 2>/dev/null || true\n"
+      inline << "chmod +x #{Homestead.sh_single_quote(script_path)}\n"
+      inline << "BOOTSTRAP_NAME=#{Homestead.sh_single_quote(t[:name])}\n"
+      inline << "BOOTSTRAP_USER=#{Homestead.sh_single_quote(t[:user])}\n"
+      inline << "BOOTSTRAP_WD=#{Homestead.sh_single_quote(t[:working_dir])}\n"
+      inline << "BOOTSTRAP_SCRIPT=#{Homestead.sh_single_quote(script_path)}\n"
+      inline << "echo \"[homestead][bootstrap] -> ${BOOTSTRAP_NAME} (user=${BOOTSTRAP_USER}, wd=${BOOTSTRAP_WD:-<none>})\"\n"
+      inline << "if [ -z \"$BOOTSTRAP_USER\" ]; then BOOTSTRAP_USER=\"vagrant\"; fi\n"
+      inline << "if ! printf '%s' \"$BOOTSTRAP_USER\" | grep -Eq '^[a-zA-Z0-9_-]+$'; then\n"
+      inline << "  echo \"[homestead][bootstrap] ! 非法 user：${BOOTSTRAP_USER}（已跳过）\"\n"
+      inline << "  rc=0\n"
+      inline << "else\n"
+      inline << "  if [ \"$BOOTSTRAP_USER\" = \"root\" ]; then\n"
+      inline << "    sudo -H env BOOTSTRAP_WD=\"$BOOTSTRAP_WD\" BOOTSTRAP_SCRIPT=\"$BOOTSTRAP_SCRIPT\" bash -lc 'if [ -n \"$BOOTSTRAP_WD\" ]; then cd \"$BOOTSTRAP_WD\" 2>/dev/null || true; fi; bash \"$BOOTSTRAP_SCRIPT\"'\n"
+      inline << "  elif [ \"$BOOTSTRAP_USER\" = \"vagrant\" ]; then\n"
+      inline << "    env BOOTSTRAP_WD=\"$BOOTSTRAP_WD\" BOOTSTRAP_SCRIPT=\"$BOOTSTRAP_SCRIPT\" bash -lc 'if [ -n \"$BOOTSTRAP_WD\" ]; then cd \"$BOOTSTRAP_WD\" 2>/dev/null || true; fi; bash \"$BOOTSTRAP_SCRIPT\"'\n"
+      inline << "  else\n"
+      inline << "    sudo -iu \"$BOOTSTRAP_USER\" env BOOTSTRAP_WD=\"$BOOTSTRAP_WD\" BOOTSTRAP_SCRIPT=\"$BOOTSTRAP_SCRIPT\" bash -lc 'if [ -n \"$BOOTSTRAP_WD\" ]; then cd \"$BOOTSTRAP_WD\" 2>/dev/null || true; fi; bash \"$BOOTSTRAP_SCRIPT\"'\n"
+      inline << "  fi\n"
+      inline << "  rc=$?\n"
+      inline << "fi\n"
+      inline << "if [ $rc -ne 0 ]; then echo \"[homestead][bootstrap] ! ${BOOTSTRAP_NAME} 退出码=${rc}（已忽略）\"; fi\n"
+      inline << "\n"
+    end
+
+    inline << "echo \"[homestead][bootstrap] 完成\"\n"
+    inline << "exit 0\n"
+
+    inline
   end
 end

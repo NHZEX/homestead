@@ -45,8 +45,15 @@ features:
 services:
   - enabled:
       - "mysql"
-#   - disabled:
-#       - "postgresql@11-main"
+      - "postgresql@16-main"
+  #- disabled:
+
+# 启动时执行的脚本
+# bootstrap:
+#   - script: |
+#       "df -h"
+#     user: "vagrant"
+#     working_dir: "/"
 
 # ports:
 #   - send: 33060 # MySQL/MariaDB
