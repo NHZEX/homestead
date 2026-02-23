@@ -1,0 +1,16 @@
+services:
+  sublinkpro:
+    image: zerodeng/sublink-pro:v1.0.83
+    container_name: sublinkpro
+    restart: on-failure
+    ports:
+      - "8000:8000"
+    volumes:
+      - "/opt/sublinkpro/db:/app/db"
+      - "/opt/sublinkpro/template:/app/template"
+      - "/opt/sublinkpro/logs:/app/logs"
+    environment:
+      - SUBLINK_CAPTCHA_MODE=1
+
+## 默认密码
+## admin / 123456
