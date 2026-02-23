@@ -1,0 +1,17 @@
+services:
+  miaomiaowu:
+    image: ghcr.io/iluobei/miaomiaowu:0.5.3
+    restart: on-failure
+    ports:
+      - "8128:8128"
+    volumes:
+      - "/opt/miaomiaowu/mmw-data:/app/data"
+      - "/opt/miaomiaowu/subscribes:/app/subscribes"
+      - "/opt/miaomiaowu/rule_templates:/app/rule_templates"
+    environment:
+      - PORT=8128
+      - LOG_LEVEL=info
+      - JWT_SECRET=${JWT_SECRET:-please_change_it_kyrr7hx7}
+
+## 默认密码
+## admin / 123456
